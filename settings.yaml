@@ -1,0 +1,6 @@
+from: markdown+yaml_metadata_block+header_attributes+implicit_header_references+multiline_tables
+to: docx
+toc: true
+reference-doc: formatting-styles.docx
+output-file: output/sample-document.docx
+metadata-file: metadata.yaml

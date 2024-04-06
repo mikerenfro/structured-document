@@ -1,0 +1,50 @@
+name: 'Create .docx file'
+
+# The `on` key lets you define the events that trigger when the workflow is run. You can define multiple events here. For more information, see "[AUTOTITLE](/actions/using-workflows/triggering-a-workflow#using-events-to-trigger-workflows)."
+on:
+# Add the `workflow_dispatch` event if you want to be able to manually run this workflow from the UI. For more information, see [`workflow_dispatch`](/actions/using-workflows/events-that-trigger-workflows#workflow_dispatch).
+  workflow_dispatch:
+  # Add the `push` event, so that the workflow runs automatically every time a commit is pushed to a branch called `main`. For more information, see [`push`](/actions/using-workflows/events-that-trigger-workflows#push).
+  push:
+    branches:
+      - main
+  # Add the `pull_request` event, so that the workflow runs automatically every time a pull request is created or updated. For more information, see [`pull_request`](/actions/using-workflows/events-that-trigger-workflows#pull_request).
+  pull_request:
+
+# This modifies the default permissions granted to `GITHUB_TOKEN`. This will vary depending on the needs of your workflow. For more information, see "[AUTOTITLE](/actions/using-jobs/assigning-permissions-to-jobs)."
+#
+# In this example, the `pull-requests: read` permission is needed for the `trilom/file-changes-action` action that is used later in this workflow.
+permissions:
+  contents: read
+  pull-requests: read
+# The `concurrency` key ensures that only a single workflow in the same concurrency group will run at the same time. For more information, see "[AUTOTITLE](/actions/using-jobs/using-concurrency)."
+# `concurrency.group` generates a concurrency group name from the workflow name and pull request information. The `||` operator is used to define fallback values. 
+# `concurrency.cancel-in-progress` cancels any currently running job or workflow in the same concurrency group.
+concurrency:
+  group: '${{ github.workflow }} @ ${{ github.event.pull_request.head.label || github.head_ref || github.ref }}'
+  cancel-in-progress: true
+
+# The `jobs` key groups together all the jobs that run in the workflow file.
+jobs:
+  # This line defines a job with the ID `make-docx` that is stored within the `jobs` key.
+  make-docx:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: create file list
+        id: files_list
+        run: |
+          mkdir output  # create output dir
+          echo "files=$(printf '"%s" ' [0-9]*.md)" > $GITHUB_OUTPUT
+
+      - name: Build .docx
+        uses: docker://pandoc/latex:2.9
+        with:
+          args: --defaults=settings.yaml ${{ steps.files_list.outputs.files }}
+
+      - name: Upload .docx
+        uses: actions/upload-artifact@v3
+        with:
+          name: output
+          path: output
