@@ -8,7 +8,7 @@ on:
   pull_request:
 
 permissions:
-  contents: read
+  contents: write
   pull-requests: read
 concurrency:
   group: '${{ github.workflow }} @ ${{ github.event.pull_request.head.label || github.head_ref || github.ref }}'
@@ -23,16 +23,15 @@ jobs:
       - name: create file list
         id: files_list
         run: |
-          mkdir output  # create output dir
           echo "files=$(printf '"%s" ' [0-9]*.md)" > $GITHUB_OUTPUT
 
       - name: Build .docx
-        uses: docker://pandoc/latex:2.9
+        uses: docker://pandoc/core:3.1
         with:
           args: --defaults=settings.yaml ${{ steps.files_list.outputs.files }}
 
       - name: Upload .docx
-        uses: actions/upload-artifact@v3
+        uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          name: sample-document.docx
-          path: sample-document.docx
+          commit_message: Upload from GitHub Actions
+
