@@ -2,5 +2,5 @@ from: markdown+yaml_metadata_block+header_attributes+implicit_header_references+
 to: docx
 toc: true
 reference-doc: formatting-styles.docx
-output-file: output/sample-document.docx
+output-file: sample-document.docx
 metadata-file: metadata.yaml
